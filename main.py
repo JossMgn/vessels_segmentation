@@ -4,16 +4,15 @@ import numpy as np
 import os
 from random import randint
 
-def showImg(filepath, filename=None):
+def showImg(image, imname=None):
     '''
-        Allow to display image from the path and with a legend or not.
-        -filepath: the path of the image in the db
-        -filename: the name of the file in the db
+        Allow to display image with a legend or not.
+        -image: the image that you want to display
+        -imname: the name of the image in the db
     '''
-    img = io.imread(filepath)
-    io.imshow(img)
-    if filename is not None:
-        plt.title(filename)
+    io.imshow(image)
+    if imname is not None:
+        plt.title(imname)
     plt.show()
 
 def readImg(path, lim=-1, rand=True):
@@ -51,5 +50,6 @@ def readImg(path, lim=-1, rand=True):
 if __name__ == "__main__":
     filename = "./Data/InputData/training/images/21_training.tif"
     path = "./Data/InputData/training/images"
-    # showImg(filename)
-    readImg(path, lim=3)
+    images = readImg(path, lim=3)
+    for im in images:
+        showImg(im[0], im[1])
