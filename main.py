@@ -1,6 +1,5 @@
-from skimage import data, io
+from skimage import io
 from matplotlib import pyplot as plt
-import numpy as np
 import os
 from random import randint
 
@@ -41,7 +40,6 @@ def readImg(path, lim=-1, rand=True):
     filepaths = [os.path.join(path, name) for name in filenames]
     images = []
     for fp, fn in zip(filepaths, filenames):
-        # showImg(fp, fn)
         images.append([io.imread(fp), fn])
 
     return images
