@@ -3,7 +3,6 @@ from skimage import io, draw
 from skimage import morphology as mrph
 from skimage import filters as flt
 import numpy as np
-from example import *
 
 def toGray(im, channel):
     '''
@@ -40,7 +39,7 @@ def imToMask(im):
 
     x, y = np.shape(im)
     seed = np.zeros((x, y), dtype=np.float32)
-    seed[0:50,0:50] = 0.5 # Création d'une image de marqueur pour reconstruire l'extérieur
+    seed[0:3,0:3] = 1 # Création d'une image de marqueur pour reconstruire l'extérieur
 
     mask = mrph.reconstruction(seed, 1-hyst, 'dilation') #Utilisation de la dilatation géodésique pour reconstruire les bords extérieurs
     
@@ -60,4 +59,32 @@ def imToMask(im):
 
     return 1-mask
 
+def segmentVessels(im):
+    """
+    Segment the vessels in the image based on the mask image.
+        -im: image in gray scale to segment
+    RETURN
+        -segIm = segmented image.
+    """
+    #Retrieve the mask of the image
+    mask = imToMask(im)
+
+    #Reduce slow variation of image luminance (top-hat)
+    wthIm = mrph.black_tophat(im)
+    finalWthIm = np.where(mask == 1, wthIm, 0)
+
+    #Visualization
+    fig, ax = plt.subplots(nrows=2, ncols=2)
+    ax[0, 0].imshow(im, cmap='gray')
+    ax[0, 0].set_title('Original image')
+    ax[0, 1].imshow(mask, cmap='gray')
+    ax[0, 1].set_title('mask image')
+    ax[1, 0].imshow(wthIm, cmap='magma')
+    ax[1, 0].set_title('white tophat without mask')
+    ax[1, 1].imshow(finalWthIm, cmap='magma')
+    ax[1, 1].set_title('maswhite tophat with mask')
+    for a in ax.ravel():
+        a.axis('off')
+    plt.tight_layout()
+    plt.show()
 
