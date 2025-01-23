@@ -72,18 +72,24 @@ def segmentVessels(im):
     #Reduce slow variation of image luminance (top-hat)
     bthIm = mrph.black_tophat(im)
     norm_bthIm = bthIm/np.max(bthIm)
-    norm_bthIm = np.where(mask == 1, 1-norm_bthIm, 0)
+    # norm_bthIm = np.where(mask == 1, norm_bthIm, 0)
+
+    #Retrieve a background image
+    im_backmin = im - norm_bthIm
+    im_gauss = flt.gaussian(im_backmin, sigma=1)
+    im_median = flt.median(im_backmin)
+    im_bgauss = flt.difference_of_gaussians(im_backmin, low_sigma=1, high_sigma=5)
 
     #Visualization
-    fig, ax = plt.subplots(nrows=2, ncols=2)
+    fig, ax = plt.subplots(nrows=3, ncols=3)
     ax[0, 0].imshow(im, cmap='gray')
     ax[0, 0].set_title('Original image')
     ax[0, 1].imshow(mask, cmap='gray')
     ax[0, 1].set_title('mask image')
-    ax[1, 0].imshow(bthIm, cmap='magma')
-    ax[1, 0].set_title('Black tophat')
-    ax[1, 1].imshow(norm_bthIm, cmap='gray')
-    ax[1, 1].set_title('final image')
+    ax[1, 0].imshow(im_backmin, cmap='gray')
+    ax[1, 0].set_title('res')
+    ax[1, 1].imshow(im_gauss, cmap='gray')
+    ax[1, 1].set_title('gauss')
     for a in ax.ravel():
         a.axis('off')
     plt.tight_layout()
