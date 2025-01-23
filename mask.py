@@ -70,8 +70,9 @@ def segmentVessels(im):
     mask = imToMask(im)
 
     #Reduce slow variation of image luminance (top-hat)
-    wthIm = mrph.black_tophat(im)
-    finalWthIm = np.where(mask == 1, wthIm, 0)
+    bthIm = mrph.black_tophat(im)
+    norm_bthIm = bthIm/np.max(bthIm)
+    norm_bthIm = np.where(mask == 1, 1-norm_bthIm, 0)
 
     #Visualization
     fig, ax = plt.subplots(nrows=2, ncols=2)
@@ -79,10 +80,10 @@ def segmentVessels(im):
     ax[0, 0].set_title('Original image')
     ax[0, 1].imshow(mask, cmap='gray')
     ax[0, 1].set_title('mask image')
-    ax[1, 0].imshow(wthIm, cmap='magma')
-    ax[1, 0].set_title('white tophat without mask')
-    ax[1, 1].imshow(finalWthIm, cmap='magma')
-    ax[1, 1].set_title('maswhite tophat with mask')
+    ax[1, 0].imshow(bthIm, cmap='magma')
+    ax[1, 0].set_title('Black tophat')
+    ax[1, 1].imshow(norm_bthIm, cmap='gray')
+    ax[1, 1].set_title('final image')
     for a in ax.ravel():
         a.axis('off')
     plt.tight_layout()
