@@ -81,7 +81,7 @@ def segmentVessels(im):
     im_bgauss = flt.difference_of_gaussians(im_backmin, low_sigma=1, high_sigma=5)
 
     #Visualization
-    fig, ax = plt.subplots(nrows=3, ncols=3)
+    fig, ax = plt.subplots(nrows=3, ncols=2)
     ax[0, 0].imshow(im, cmap='gray')
     ax[0, 0].set_title('Original image')
     ax[0, 1].imshow(mask, cmap='gray')
@@ -90,6 +90,10 @@ def segmentVessels(im):
     ax[1, 0].set_title('res')
     ax[1, 1].imshow(im_gauss, cmap='gray')
     ax[1, 1].set_title('gauss')
+    ax[2, 0].imshow(im_median, cmap='gray')
+    ax[2, 0].set_title('median')
+    ax[2, 1].imshow(im_bgauss, cmap='gray')
+    ax[2, 1].set_title('bgauss')
     for a in ax.ravel():
         a.axis('off')
     plt.tight_layout()
