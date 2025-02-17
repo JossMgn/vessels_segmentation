@@ -2,6 +2,7 @@ from skimage import io
 from matplotlib import pyplot as plt
 import os
 from random import randint
+import numpy as np
 
 def showImg(image, imname=None):
     '''
@@ -43,3 +44,23 @@ def readImg(path, lim=-1, rand=True):
         images.append([io.imread(fp), fn])
 
     return images
+
+def compare_img(gt_img, seg_img):
+    """
+        Return the IoU between the segmented image and the ground truth.
+    """
+    #iou 
+    intersection = np.sum(np.where(gt_img==255, seg_img, 0) == 255) #give also the true positive
+    union = np.sum(gt_img == 255) + np.sum(seg_img == 255) - intersection
+    iou = intersection / union
+
+    #FP
+    fp = np.sum(seg_img == 255) - intersection
+
+    #TN
+    tn = np.sum(np.where(gt_img==0, seg_img, 255)==0)
+
+    #FN
+    fn = np.sum(np.where(gt_img==1, seg_img, 255)==0)
+
+    print(iou, intersection, fp, tn, fn)

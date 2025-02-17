@@ -4,11 +4,13 @@ import time
 
 if __name__ == "__main__":
     filename = "./Data/InputData/training/images/21_training.tif"
-    path = "./Data/InputData/training/images"
+    path_img = "./Data/InputData/training/images"
+    path_gt = "./Data/InputData/training/1st_manual"
 
     start = time.time()
-    images = readImg(path, lim=3)
+    images = readImg(path_img, lim=3)
     end = time.time()
+    gt = readImg(path_gt, lim=3)
     print(f"time for reading images: {round(end-start, 3)}sec.")
     # showImg(images[0][0], images[0][1])
 
@@ -24,7 +26,10 @@ if __name__ == "__main__":
 
     # start = time.time()
     grayim = toGray(images[0][0], channel="g")
+    # plt.imshow(gt[0][0][0])
+    # plt.show()
     segmentVessels(grayim)
+    compare_img(gt[0][0][0], gt[0][0][0])
     # end = time.time()
 
     # fig, axs = plt.subplots(2, 2)
