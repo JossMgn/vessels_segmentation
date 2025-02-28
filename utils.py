@@ -45,6 +45,13 @@ def readImg(path, lim=-1, rand=True):
 
     return images
 
+def readGt(im_name, path):
+    gt_name = im_name[0:2]+"_manual1.gif"
+    file_path = os.path.join(path, gt_name)
+    im_gt = io.imread(file_path)
+
+    return [im_gt, gt_name]
+
 def compare_img(gt_img, seg_img):
     """
         Return the IoU between the segmented image and the ground truth.

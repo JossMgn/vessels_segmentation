@@ -1,7 +1,9 @@
 from utils import *
+import skimage as sk
 from skimage import io, draw
 from skimage import morphology as mrph
 from skimage import filters as flt
+from skimage import transform as trf
 import numpy as np
 
 def toGray(im, channel):
@@ -59,7 +61,7 @@ def imToMask(im):
 
     return 1-mask
 
-def segmentVessels(im):
+def OGSegmentVessels(im):
     """
     Segment the vessels in the image based on the mask image.
         -im: image in gray scale to segment
@@ -69,33 +71,86 @@ def segmentVessels(im):
     #Retrieve the mask of the image
     mask = imToMask(im)
 
-    #Reduce slow variation of image luminance (top-hat)
-    bthIm = mrph.black_tophat(im)
-    norm_bthIm = bthIm/np.max(bthIm)
-    # norm_bthIm = np.where(mask == 1, norm_bthIm, 0)
 
-    #Retrieve a background image
-    im_backmin = im - norm_bthIm
-    im_gauss = flt.gaussian(im_backmin, sigma=1)
-    im_median = flt.median(im_backmin)
-    im_bgauss = flt.difference_of_gaussians(im_backmin, low_sigma=1, high_sigma=5)
+    #Remove background noise
+    im_med = flt.median(im)
+    im_med = np.where(mask == 1, im_med, 0)
+    #Reduce slow variation of the image's background luminance (bottom hat)
+    ftp = np.zeros([9,9])
+    ftp[:,4] = 1
+    ftp[4,:] = 1
+    im_bth = mrph.black_tophat(im_med, ftp)
+    im_bth = im_bth/np.max(im_bth)
+    im_bth = np.where(mask == 1, im_bth, 0)
+
+    #Highlight vessels by a sequence of opening
+        #Create footprints
+    angles = np.linspace(0, 180, 30)
+    ftp = np.zeros([21,21])
+    ftp[:,10] = 1
+    ftps = [trf.rotate(ftp, x) for x in angles]
+        #Apply opening
+    im_open = np.zeros(im.shape)
+    for f in ftps:
+        op = mrph.opening(im_bth, f)
+        im_open += op
+
+    im_open = im_open / np.max(im_open)
+    im_open = np.where(mask == 1, im_open, 0)
+
+    #Binarization of images
+    im_bin = np.where(im_open >= 0.05, 1, 0)
+
+    #Skeletonized
+    im_skel = mrph.skeletonize(im_bin)
+        #Remove artefacts
+    im_skel_clean = mrph.area_opening(im_skel, area_threshold=150, connectivity=2)
+
+    #Rebuild vessels
+    im_reconstruct = mrph.reconstruction(im_skel_clean, im_bin, 'dilation')
+
+
+    # #Reduce slow variation of image luminance (top-hat)
+    # bthIm = mrph.black_tophat(im)
+    # norm_bthIm = bthIm/np.max(bthIm)
+    # # norm_bthIm = np.where(mask == 1, norm_bthIm, 0)
+
+    # #Retrieve a background image
+    # im_backmin = im - norm_bthIm
+    # im_gauss = flt.gaussian(im_backmin, sigma=1)
+    # im_median = flt.median(im_backmin)
+    # im_bgauss = flt.difference_of_gaussians(im_backmin, low_sigma=1, high_sigma=5)
 
     #Visualization
-    fig, ax = plt.subplots(nrows=3, ncols=2)
+    fig, ax = plt.subplots(nrows=2, ncols=2)
     ax[0, 0].imshow(im, cmap='gray')
     ax[0, 0].set_title('Original image')
     ax[0, 1].imshow(mask, cmap='gray')
-    ax[0, 1].set_title('mask image')
-    ax[1, 0].imshow(im_backmin, cmap='gray')
-    ax[1, 0].set_title('res')
-    ax[1, 1].imshow(im_gauss, cmap='gray')
-    ax[1, 1].set_title('gauss')
-    ax[2, 0].imshow(im_median, cmap='gray')
-    ax[2, 0].set_title('median')
-    ax[2, 1].imshow(im_bgauss, cmap='gray')
-    ax[2, 1].set_title('bgauss')
+    ax[0, 1].set_title('mask')
+    ax[1, 0].imshow(im_bth, cmap='gray')
+    ax[1, 0].set_title('bth')
+    ax[1, 1].imshow(im_open, cmap='gray')
+    ax[1, 1].set_title('open')
     for a in ax.ravel():
         a.axis('off')
     plt.tight_layout()
     plt.show()
+
+    fig, ax = plt.subplots(nrows=2, ncols=2)
+    ax[0, 0].imshow(im, cmap='gray')
+    ax[0, 0].set_title('Original image')
+    ax[0, 1].imshow(im_bin, cmap='gray')
+    ax[0, 1].set_title('binarized')
+    ax[1, 0].imshow(im_skel_clean, cmap='gray')
+    ax[1, 0].set_title('clean skeletonized')
+    ax[1, 1].imshow(im_reconstruct, cmap='gray')
+    ax[1, 1].set_title('reconstruction')
+    for a in ax.ravel():
+        a.axis('off')
+    plt.tight_layout()
+    plt.show()
+
+
+    im_seg = sk.img_as_ubyte(im_reconstruct)
+    return im_seg
 
